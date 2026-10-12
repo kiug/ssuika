@@ -2,20 +2,16 @@ use raylib::prelude::*;
 
 const MERGE_SOUND_COUNT: usize = 10;
 
-pub struct SoundManager {
-    land: Sound<'static>,
-    merge: [Sound<'static>; MERGE_SOUND_COUNT],
-    explode: Sound<'static>,
-    music: Music<'static>,
+pub struct SoundManager<'a> {
+    land: Sound<'a>,
+    merge: [Sound<'a>; MERGE_SOUND_COUNT],
+    explode: Sound<'a>,
+    music: Music<'a>,
 }
 
-impl SoundManager {
+impl<'a> SoundManager<'a> {
     /// Odpowiednik `sound_init()`.
-    pub fn new() -> Self {
-        // InitAudioDevice()
-        let audio: &'static mut RaylibAudio =
-            Box::leak(Box::new(RaylibAudio::init_audio_device().unwrap()));
-
+    pub fn new(audio: &'a RaylibAudio) -> Self {
         let land = audio
             .new_sound("assets/sfx/land.wav")
             .expect("failed to load land.wav");

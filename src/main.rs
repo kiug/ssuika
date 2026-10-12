@@ -10,7 +10,8 @@ fn main() {
     let (mut rl, thread) = raylib::init().size(1280, 720).title("ssuika").build();
     let mut grid = Grid::new(&mut rl, &thread);
     let mut particles = ParticleSystem::new();
-    let mut sound = SoundManager::new();
+    let audio = raylib::core::audio::RaylibAudio::init_audio_device().unwrap();
+    let mut sound = SoundManager::new(&audio);
 
     while !rl.window_should_close() {
         let dt = rl.get_frame_time();
