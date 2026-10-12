@@ -1,8 +1,10 @@
 mod bag;
+mod draw;
 mod grid;
 mod particle;
 mod sound;
 
+use draw::draw;
 use grid::Grid;
 use particle::ParticleSystem;
 use sound::SoundManager;
@@ -19,7 +21,7 @@ fn main() {
         grid.input(&rl, dt, &mut particles, &sound);
         grid.update(&rl, dt, &mut particles, &sound);
         let mut d = rl.begin_drawing(&thread);
-        grid.draw(&mut d, &particles);
+        draw(&grid, &mut d, &particles);
         sound.update_music();
     }
 }
