@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 
 use raylib::prelude::*;
 
+use crate::bag::Bag;
 use crate::particle::{EffectType, ParticleSystem};
 use crate::sound::SoundManager;
 
@@ -11,10 +12,6 @@ pub const ROWS: usize = 14;
 pub const CELL: f32 = 32.0;
 pub const GRID_PIXEL_W: f32 = COLS as f32 * CELL;
 pub const GRID_PIXEL_H: f32 = ROWS as f32 * CELL;
-
-const BAG_SIZE: usize = 7;
-const POWER: f32 = 1.0;
-const NEXT_COUNT: usize = BAG_SIZE;
 
 const DAS: f32 = 0.100;
 const ARR: f32 = 0.05;
@@ -85,8 +82,7 @@ pub struct Grid {
     piece: Piece,
     soft_drop: bool,
 
-    recency: [f32; BAG_SIZE],
-    next_queue: [i32; NEXT_COUNT],
+    bag: Bag,
 
     das_left: f32,
     arr_left: f32,
@@ -125,8 +121,7 @@ impl Grid {
             cells: [[Cell::EMPTY; COLS]; ROWS],
             piece: Piece::default(),
             soft_drop: false,
-            recency: [1.0; BAG_SIZE],
-            next_queue: [0; NEXT_COUNT],
+            bag: Bag::new(rl),
             das_left: 0.0,
             arr_left: 0.0,
             das_right: 0.0,
@@ -141,10 +136,6 @@ impl Grid {
             screen_h,
         };
 
-        for i in 0..NEXT_COUNT {
-            let next = grid.gen_next(rl);
-            grid.next_queue[i] = next;
-        }
         grid.piece_spawn(rl);
 
         grid
@@ -388,8 +379,8 @@ impl Grid {
             0.0,
             Color::WHITE,
         );
-        for i in 0..BAG_SIZE {
-            let tier = self.next_queue[i];
+        for i in 0..self.bag.preview_len() {
+            let tier = self.bag.preview(i);
             draw_tier_shape(
                 d,
                 qx as f32 + CELL / 2.0,
@@ -489,35 +480,6 @@ impl Grid {
         (self.screen_h as f32 - GRID_PIXEL_H) / 2.0 + r as f32 * CELL + CELL / 2.0
     }
 
-    fn gen_next(&mut self, rl: &RaylibHandle) -> i32 {
-        let mut weights = [0.0f32; BAG_SIZE];
-        let mut total = 0.0f32;
-        for i in 0..BAG_SIZE {
-            weights[i] = (1.0 / self.recency[i]).powf(POWER);
-            total += weights[i];
-        }
-
-        let roll = rl.get_random_value::<i32>(0..10001) as f32 / 10000.0 * total;
-        let mut pick = BAG_SIZE - 1;
-        let mut acc = 0.0f32;
-        for i in 0..BAG_SIZE {
-            acc += weights[i];
-            if roll < acc {
-                pick = i;
-                break;
-            }
-        }
-
-        self.recency[pick] += 1.0;
-        for i in 0..BAG_SIZE {
-            if i != pick {
-                self.recency[i] /= 2.0;
-            }
-        }
-
-        pick as i32
-    }
-
     fn grid_settled(&self) -> bool {
         for r in 0..ROWS - 1 {
             for c in 0..COLS {
@@ -541,19 +503,10 @@ impl Grid {
         }
     }
 
-    fn next_from_bag(&mut self, rl: &RaylibHandle) -> i32 {
-        let pick = self.next_queue[0];
-        for i in 0..NEXT_COUNT - 1 {
-            self.next_queue[i] = self.next_queue[i + 1];
-        }
-        self.next_queue[NEXT_COUNT - 1] = self.gen_next(rl);
-        pick
-    }
-
     fn piece_spawn(&mut self, rl: &RaylibHandle) {
         self.piece.c = COLS as i32 / 2;
         self.piece.r = 0;
-        self.piece.cell = Cell::sand(self.next_from_bag(rl));
+        self.piece.cell = Cell::sand(self.bag.next(rl));
         self.piece.active = true;
     }
 
