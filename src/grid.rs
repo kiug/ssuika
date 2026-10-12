@@ -17,7 +17,7 @@ const POWER: f32 = 1.0;
 const NEXT_COUNT: usize = BAG_SIZE;
 
 const DAS: f32 = 0.100;
-const ARR: f32 = 0.001;
+const ARR: f32 = 0.05;
 
 const MAX_LEVEL: i32 = 10;
 
