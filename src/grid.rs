@@ -119,7 +119,9 @@ impl Grid {
             cells: [[Cell::EMPTY; COLS]; ROWS],
             piece: Piece::default(),
             soft_drop: false,
-            bag: Bag::new(rl),
+            bag: Bag::new(std::array::from_fn(|_| {
+                rl.get_random_value::<i32>(0..i32::MAX)
+            })),
             das_left: 0.0,
             arr_left: 0.0,
             das_right: 0.0,
@@ -355,7 +357,7 @@ impl Grid {
     fn piece_spawn(&mut self, rl: &RaylibHandle) {
         self.piece.c = COLS as i32 / 2;
         self.piece.r = 0;
-        self.piece.cell = Cell::sand(self.bag.next(rl));
+        self.piece.cell = Cell::sand(self.bag.next(rl.get_random_value::<i32>(0..i32::MAX)));
         self.piece.active = true;
     }
 

@@ -1,5 +1,3 @@
-use raylib::prelude::*;
-
 const BAG_SIZE: usize = 7;
 const POWER: f32 = 1.0;
 const NEXT_COUNT: usize = BAG_SIZE;
@@ -10,24 +8,25 @@ pub struct Bag {
 }
 
 impl Bag {
-    pub fn new(rl: &RaylibHandle) -> Self {
+    /// Inicjalizuje worek pierwszymi losowaniami (po jednym na element kolejki).
+    pub fn new(rolls: [i32; NEXT_COUNT]) -> Self {
         let mut bag = Bag {
             recency: [1.0; BAG_SIZE],
             next_queue: [0; NEXT_COUNT],
         };
         for i in 0..NEXT_COUNT {
-            bag.next_queue[i] = bag.gen_next(rl);
+            bag.next_queue[i] = bag.gen_next(rolls[i]);
         }
         bag
     }
 
-    /// Pobiera kolejny klocek i dopełnia kolejkę (dawny `next_from_bag`).
-    pub fn next(&mut self, rl: &RaylibHandle) -> i32 {
+    /// Pobiera kolejny klocek i dopełnia kolejkę.
+    pub fn next(&mut self, roll: i32) -> i32 {
         let pick = self.next_queue[0];
         for i in 0..NEXT_COUNT - 1 {
             self.next_queue[i] = self.next_queue[i + 1];
         }
-        self.next_queue[NEXT_COUNT - 1] = self.gen_next(rl);
+        self.next_queue[NEXT_COUNT - 1] = self.gen_next(roll);
         pick
     }
 
@@ -41,7 +40,7 @@ impl Bag {
         NEXT_COUNT
     }
 
-    fn gen_next(&mut self, rl: &RaylibHandle) -> i32 {
+    fn gen_next(&mut self, roll: i32) -> i32 {
         let mut weights = [0.0f32; BAG_SIZE];
         let mut total = 0.0f32;
         for i in 0..BAG_SIZE {
@@ -49,7 +48,7 @@ impl Bag {
             total += weights[i];
         }
 
-        let roll = rl.get_random_value::<i32>(0..10001) as f32 / 10000.0 * total;
+        let roll = roll as f32 / i32::MAX as f32 * total;
         let mut pick = BAG_SIZE - 1;
         let mut acc = 0.0f32;
         for i in 0..BAG_SIZE {
